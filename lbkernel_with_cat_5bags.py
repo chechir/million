@@ -404,43 +404,47 @@ print( pd.DataFrame(xgb_pred1).head() )
 ##### RUN CATBOOST
 
 ###training full:
-np.random.seed(seed)
-df_train, df_test = data.load_data(cache=True)
-df = data.create_fulldf(df_train, df_test)
-
-df = df.fillna(NULL_VALUE)
-df = data.clean_data(df)
-df = data.encode_labels(df)
-#df = features.add_features(df)
-
-logerror = df['logerror'].values
-targets = logerror
-df = data.select_features(df)
-
-df_train, targets, df_test = data.split_data(df, logerror)
-df_bag, bag_targets = delete_some_outliers(df_train, targets)
-
-params = model_params.get_ctune80()
-params.pop('use_best_model')
-
-sub_preds = np.repeat(0, len(df_test))
-for i in range(n_bags):
-    model = CatBoostRegressor(**params)
-    model.fit(df_train.values, targets)
-    sub_preds = model.predict(df_test.values) + sub_preds
-
-    #prepare for the next iteration
-    df_bag, bag_targets = delete_some_outliers(df_train, targets)
-    print(i, df_bag.shape)
-    #params['seed'] = i
-sub_preds = sub_preds / n_bags
-
 preds_path = tools.dropbox() + '/million/cache/preds_bagged_{}.pkl'.format(n_bags)
-tools.write_pickle(sub_preds, preds_path)
+calculate_preds = False
+if calculate_preds:
+    np.random.seed(seed)
+    df_train, df_test = data.load_data(cache=True)
+    df = data.create_fulldf(df_train, df_test)
+
+    df = df.fillna(NULL_VALUE)
+    df = data.clean_data(df)
+    df = data.encode_labels(df)
+    #df = features.add_features(df)
+
+    logerror = df['logerror'].values
+    targets = logerror
+    df = data.select_features(df)
+
+    df_train, targets, df_test = data.split_data(df, logerror)
+    df_bag, bag_targets = delete_some_outliers(df_train, targets)
+
+    params = model_params.get_ctune80()
+    params.pop('use_best_model')
+
+    sub_preds = np.repeat(0, len(df_test))
+    for i in range(n_bags):
+        model = CatBoostRegressor(**params)
+        model.fit(df_train.values, targets)
+        sub_preds = model.predict(df_test.values) + sub_preds
+
+        #prepare for the next iteration
+        df_bag, bag_targets = delete_some_outliers(df_train, targets)
+        print(i, df_bag.shape)
+        #params['seed'] = i
+    sub_preds = sub_preds / n_bags
+
+    tools.write_pickle(sub_preds, preds_path)
+else:
+    sub_preds = tools.read_pickle(preds_path)
 
 ##### COMBINE XGBOOST RESULTS
 
-XGB1_WEIGHT = 0.6583  # Weight of first in combination of two XGB models
+XGB1_WEIGHT = 0.56  # Weight of first in combination of two XGB models
 
 xgb_pred = XGB1_WEIGHT*xgb_pred1 + (1-XGB1_WEIGHT)*sub_preds
 #xgb_pred = xgb_pred1
