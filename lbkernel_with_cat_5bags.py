@@ -444,6 +444,7 @@ else:
 
 ##### COMBINE XGBOOST RESULTS
 
+#XGB_WEIGHT = 0.73  (try this weight)
 XGB1_WEIGHT = 0.56  # Weight of first in combination of two XGB models
 
 xgb_pred = XGB1_WEIGHT*xgb_pred1 + (1-XGB1_WEIGHT)*sub_preds
@@ -460,8 +461,6 @@ del dtest
 del dtrain
 del xgb_pred1
 gc.collect()
-
-
 
 ################
 ################
