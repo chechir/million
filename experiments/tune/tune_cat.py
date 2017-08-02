@@ -23,7 +23,7 @@ def sample_params(random=False):
 def get_random_params():
     cat_params = {
         'iterations': 9999,
-        'thread_count': 5,
+        'thread_count': 2,
         'loss_function': 'MAE',
         'auto_stop_pval': 0.0001,
         'learning_rate': np.exp(np.random.uniform(-3.5,-6.2)),
@@ -52,7 +52,7 @@ def get_best_random_params(num_elements):
             'fold_permutation_block_size', 'gradient_iterations', 'has_time'
             ]
     mm_train = json_df[columns]
-    targets = json_df['mean_bin_ent']
+    targets = json_df['mae']
     model = RFR(n_estimators=50)
     model.fit(mm_train, targets)
     predicted_losses = model.predict(random_df[columns])
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     y_mean = np.mean(train_targets)
 
     while True:
-        params = sample_params(random=True)
+        params = sample_params(random=False)
         model = CatBoostRegressor(**params)
         eval_set=[df_test.values, test_targets]
         model.fit(df_train.values, train_targets, eval_set=eval_set)

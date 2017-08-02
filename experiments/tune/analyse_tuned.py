@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from million.experiments.tune.tune_lgb import TUNING_RESULTS_PATH
+from million.experiments.tune.tune_cat import TUNING_RESULTS_PATH
 from million import tools
 
 xgb_columns = ['max_depth', 'min_child_weight', 'lambda', 'alpha', 'subsample', 'colsample_bytree', 'eta']
@@ -31,7 +31,7 @@ def plot_kelly_bin(df):
 
 def plot_losses_against_params(df, loss):
     pal = sns.color_palette()
-    params = lgb_columns
+    params = cat_columns
     for i, param in enumerate(params):
         if i > 5:
             i = 5
@@ -44,13 +44,14 @@ def plot_losses_against_params(df, loss):
 if __name__ == '__main__':
     #df = ss.DDF.from_csv(TUNING_RESULTS_PATH)
     df = tools.read_special_json(TUNING_RESULTS_PATH)
+    print 'df shape', df.shape
     best_bin_ix = np.argmin(df[binent])
     best_kelly_ix = np.argmax(df[kelly])
     print df.rowslice(best_bin_ix)
-    print df.rowslice(best_kelly_ix)
+    #print df.rowslice(best_kelly_ix)
     print 'both the same best?:', best_kelly_ix == best_bin_ix
-    plot_kelly_bin(df)
-    loss = binent
-    plot_losses_against_params(df, loss)
+    #plot_kelly_bin(df)
+    #loss = binent
+    #plot_losses_against_params(df, loss)
 
 

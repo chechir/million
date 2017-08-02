@@ -24,7 +24,7 @@ def get_ltune7k(y_mean=y_mean):
         'boosting_type': 'gbdt',
         'metric': 'mae',
         'objective': 'regression',
-        'num_threads':8,
+        'num_threads':4,
         'max_depth': 10,
         'subsample_for_bin': 2191288.0,
         'subsample_freq': 9,
@@ -42,3 +42,50 @@ def get_ltune7k(y_mean=y_mean):
         'seed': 3073881,
         }
     return lgb_params
+
+def get_ctune80(y_mean=y_mean):
+    cat_params = {
+        'iterations': 8352 + 10,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'auto_stop_pval': 0.0001,
+        'learning_rate': 0.00321990477898,
+        'depth': 5,
+        'l2_leaf_reg': 3,
+        'rsm': 0.407419112405,
+        'bagging_temperature': 0.847795225304,
+        'fold_permutation_block_size': 2,
+        'gradient_iterations': 1,
+        'random_seed': 952,
+        'has_time': False,
+        'use_best_model': True,
+        'verbose': True,
+        #'ctr_border_count': 5050,
+        #'max_ctr_complexity': 4,
+        'name': 'experiment',
+    }
+    return cat_params
+
+def get_ctune293(y_mean=y_mean):
+    cat_params = {
+        'iterations': 7760,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'auto_stop_pval': 0.0001,
+        'learning_rate': 0.0027782225151,
+        'depth': 6,
+        'l2_leaf_reg': 5,
+        'rsm': 0.589884179754,
+        'bagging_temperature': 0.660536010706,
+        'fold_permutation_block_size': 2,
+        'gradient_iterations': 1,
+        'random_seed': 18,
+        'has_time': False,
+        'use_best_model': True,
+        'verbose': True,
+        #'ctr_border_count': 5050,
+        #'max_ctr_complexity': 4,
+        'name': 'experiment',
+    }
+    return cat_params
+
