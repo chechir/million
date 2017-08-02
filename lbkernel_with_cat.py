@@ -421,6 +421,7 @@ df_train, targets, df_test = data.split_data(df, logerror)
 df_bag, bag_targets = delete_some_outliers(df_train, targets)
 
 params = model_params.get_ctune80()
+params.pop('use_best_model')
 
 sub_preds = np.repeat(0, len(df_test))
 num_boost_rounds = 110
@@ -541,7 +542,8 @@ print( submission.head() )
 from datetime import datetime
 
 print( "\nWriting results to disk ..." )
-submission.to_csv('sub_kaggle_plus_bagged{}.csv'.format(datetime.now().strftime('%Y%m%d_%H%M%S')), index=False)
+submission.to_csv('sub_kaggle_plus_bagged_cat{}.csv'.format(datetime.now().strftime('%Y%m%d_%H%M%S')), index=False)
+# cat added after submitted
 
 print( "\nFinished ...")
 
