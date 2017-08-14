@@ -405,7 +405,7 @@ print( pd.DataFrame(xgb_pred1).head() )
 
 ###training full:
 preds_path = tools.dropbox() + '/million/cache/preds_bagged20_{}.pkl'.format(n_bags)
-calculate_preds = True
+calculate_preds = False
 if calculate_preds:
     np.random.seed(seed)
     df_train, df_test = data.load_data(cache=True)
@@ -435,7 +435,12 @@ if calculate_preds:
         #prepare for the next iteration
         df_bag, bag_targets = delete_some_outliers(df_train, targets)
         print(i, df_bag.shape)
-        #params['seed'] = i
+        if np.random.normal()>0:
+            params = model_params.get_ctune80()
+        else:
+            params = model_params.get_ctune293()
+        params.pop('use_best_model')
+
     sub_preds = sub_preds / n_bags
 
     tools.write_pickle(sub_preds, preds_path)
@@ -444,7 +449,7 @@ else:
 
 ##### COMBINE XGBOOST RESULTS
 
-#XGB_WEIGHT = 0.73  (try this weight)
+XGB_WEIGHT = 0.71 # (try this weight)
 XGB1_WEIGHT = 0.56  # Weight of first in combination of two XGB models
 
 xgb_pred = XGB1_WEIGHT*xgb_pred1 + (1-XGB1_WEIGHT)*sub_preds
@@ -546,7 +551,7 @@ print( submission.head() )
 from datetime import datetime
 
 print( "\nWriting results to disk ..." )
-submission.to_csv('sub_kaggle_plus_bagged_cat{}.csv'.format(datetime.now().strftime('%Y%m%d_%H%M%S')), index=False)
+submission.to_csv('sub_kaggle_plus_bagged_cat20_.71{}.csv'.format(datetime.now().strftime('%Y%m%d_%H%M%S')), index=False)
 # cat added after submitted
 
 print( "\nFinished ...")
