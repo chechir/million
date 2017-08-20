@@ -7,6 +7,11 @@ import os
 import seamless as ss
 import logging
 
+def delete_some_outliers(df, targets):
+    outlier_ixs = (targets > 0.419) | (targets < -0.4)
+    filter_ixs = np.array([(np.random.normal() > 0.5) & o for o in outlier_ixs])
+    return df.iloc[~filter_ixs], targets[~filter_ixs]
+
 def ensemble_preds(predictions, weights):
     return np.average(predictions, weights=weights, axis=0)
 
