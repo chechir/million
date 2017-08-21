@@ -7,6 +7,7 @@ import os
 import seamless as ss
 import logging
 
+
 def delete_some_outliers(df, targets):
     outlier_ixs = (targets > 0.419) | (targets < -0.4)
     filter_ixs = np.array([(np.random.normal() > 0.5) & o for o in outlier_ixs])
@@ -93,6 +94,10 @@ def dropbox():
     path = os.path.expanduser('~/Dropbox/')
     if not os.path.isdir(path):
         path = '/Dropbox/'
+    return path
+
+def cache_dir():
+    path = dropbox() + '/million/cache/'
     return path
 
 def experiments():
