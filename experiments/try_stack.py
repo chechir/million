@@ -10,7 +10,7 @@ from million import model_params
 
 n_folds = 5
 seed = 14
-cache_dir = nptools.dropbox() + '/million/cache/'
+cache_dir = tools.cache_dir()
 
 if __name__ == '__main__':
     np.random.seed(seed)
@@ -87,12 +87,12 @@ if __name__ == '__main__':
             ('xgb_preds', xgb_ix),
             ('lgb_preds', lgb_ix)
             ]:
-        new_train[model_pred[0]] = preds_train[:, model_params[1]]
-        new_test[model_pred[0]] = preds_test[:, model_params[1]]
+        new_train[model_pred[0]] = preds_train[:, model_pred[1]]
+        new_test[model_pred[0]] = preds_test[:, model_pred[1]]
 
     features_2nd = [
             'cat_preds', 'xgb_preds', 'lgb_preds',
-            'num_bathroom', 'num_bedroom', 'num_unit']
+            'bathroomcnt', 'bedroomcnt', 'unitcnt']
 
     print('saving first level preds')
     tools.write_pickle(new_train, cache_dir + 'ps_train_2nd_folds_{}.pkl'.format(n_folds))
@@ -104,6 +104,7 @@ if __name__ == '__main__':
     print(tools.get_mae_loss(targets, model.predict(new_train[features_2nd])))
 
     sub_preds = model.predict(new_test[features_2nd])
+    sub_preds = np.clip(sub_preds, -0.5, 0.5)
     print sub_preds[0:10]
     data.generate_simple_kaggle_file(sub_preds, 'stacked_{}'.format(n_folds))
 
