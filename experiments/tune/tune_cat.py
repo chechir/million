@@ -22,11 +22,12 @@ def sample_params(random=False):
 
 def get_random_params():
     cat_params = {
-        'iterations': 9999,
+        'iterations': 11000,
         'thread_count': 2,
         'loss_function': 'MAE',
-        'auto_stop_pval': 0.0001,
-        'learning_rate': np.exp(np.random.uniform(-3.5,-6.2)),
+        'auto_stop_pval': 0.01,
+        'learning_rate': 0.004,
+        #'learning_rate': np.exp(np.random.uniform(-3.5,-6.2)),
         'depth': np.random.randint(2, 14),
         'l2_leaf_reg': np.random.randint(1, 14),
         'rsm': np.random.uniform(0.2, 1.),
