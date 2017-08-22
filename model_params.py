@@ -94,6 +94,48 @@ def get_ctune293(y_mean=y_mean):
     }
     return cat_params
 
+def get_ctune114b(y_mean=y_mean):
+    cat_params = {
+        'iterations': 9999,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'auto_stop_pval': 0.01,
+        'learning_rate': 0.008,
+        'depth': 5,
+        'l2_leaf_reg': 11,
+        'rsm': 0.589884179754,
+        'bagging_temperature': 0.660536010706,
+        'fold_permutation_block_size': 2,
+        'gradient_iterations': 1,
+        'random_seed': 6705,
+        'has_time': False,
+        'use_best_model': True,
+        'verbose': True,
+        'name': 'experiment',
+    }
+    return cat_params
+
+def get_ctune163b(y_mean=y_mean):
+    cat_params = {
+        'iterations': 9999,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'auto_stop_pval': 0.01,
+        'learning_rate': 0.008,
+        'depth': 4,
+        'l2_leaf_reg': 12,
+        'rsm': 0.3931827,
+        'bagging_temperature': 0.6615928,
+        'fold_permutation_block_size': 2,
+        'gradient_iterations': 1,
+        'random_seed': 6683,
+        'has_time': False,
+        'use_best_model': True,
+        'verbose': True,
+        'name': 'experiment',
+    }
+    return cat_params
+
 def get_keras(num_cols):
     dropout_rate = 0.20
     num_units = 30

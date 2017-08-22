@@ -10,7 +10,7 @@ from million import data, features, tools
 from million._config import NULL_VALUE, test_columns, test_dates
 import seamless as ss
 
-TUNING_RESULTS_PATH = ss.paths.experiments() + 'tune_millions_cat.json'
+TUNING_RESULTS_PATH = ss.paths.experiments() + 'tune_millions_cat_01.json'
 y_mean = 0.0102590
 
 def sample_params(random=False):
@@ -22,19 +22,21 @@ def sample_params(random=False):
 
 def get_random_params():
     cat_params = {
-        'iterations': 11000,
+        'iterations': 6000,
         'thread_count': 2,
         'loss_function': 'MAE',
-        'auto_stop_pval': 0.01,
-        'learning_rate': 0.004,
+        'auto_stop_pval': 0.05,
+        'od-type': 'Iter',
+        'iterations_wait': 40,
+        'learning_rate': 0.01,
         #'learning_rate': np.exp(np.random.uniform(-3.5,-6.2)),
-        'depth': np.random.randint(2, 14),
-        'l2_leaf_reg': np.random.randint(1, 14),
-        'rsm': np.random.uniform(0.2, 1.),
+        'depth': np.random.randint(2, 10),
+        'l2_leaf_reg': np.random.randint(1, 16),
+        'rsm': np.random.uniform(0.1, 1.),
         'bagging_temperature': np.random.uniform(0.1, 1),
         'fold_permutation_block_size': np.random.randint(1, 5),
         'gradient_iterations': 1,
-        'random_seed': np.random.randint(0, 1000),
+        'random_seed': np.random.randint(0, 9000),
         'has_time': bool(np.random.choice([1,0])),
         'use_best_model': True,
         'verbose': True,
@@ -67,21 +69,18 @@ def get_best_random_params(num_elements):
     return result
 
 if __name__ == '__main__':
-
     df_train, df_test = data.load_data(cache=False)
     df = data.create_fulldf(df_train, df_test)
-
     df = df.fillna(NULL_VALUE)
     df = data.clean_data(df)
     df = data.encode_labels(df)
-    #df = features.add_features(df)
 
     targets = df['logerror'].values
     df = data.select_features(df)
 
     print df.columns
     df_full_train, targets, df_test = data.split_data(df, targets)
-    df_train, df_test, train_targets, test_targets = data.split_cv(df_full_train, targets, 0.8)
+    df_train, df_test, train_targets, test_targets = data.split_cv(df_full_train, targets, 0.5)
 
     #dtrain = xgb.DMatrix(df_train.values, train_targets)
     #dtest = xgb.DMatrix(df_test.values, test_targets)

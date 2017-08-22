@@ -9,7 +9,7 @@ from million._config import NULL_VALUE
 from million import model_params
 
 n_folds = 5
-features_2nd = ['cat_preds', 'xgb_preds', 'lgb_preds', 'ker_preds', 'cat2_preds']
+features_2nd = ['cat_preds', 'xgb_preds', 'lgb_preds', 'ker_preds', 'cat2_preds', 'cat3_preds']
 n_models = len(features_2nd)
 
 seed = 14
@@ -92,27 +92,38 @@ if __name__ == '__main__':
 
         ######## Catboost 2!
         cat2_ix = 4
-        params = model_params.get_ctune80()
+        params = model_params.get_ctune163b()
         params.pop('use_best_model')
         model = CatBoostRegressor(**params)
         model.fit(x_train, y_train)
-        preds_train[val_ix, cat_ix] = model.predict(x_val)
-        preds_test[:, cat_ix] += model.predict(df_test.values)
-        score = tools.get_mae_loss(y_val, preds_train[val_ix, cat_ix])
+        preds_train[val_ix, cat2_ix] = model.predict(x_val)
+        preds_test[:, cat2_ix] += model.predict(df_test.values)
+        score = tools.get_mae_loss(y_val, preds_train[val_ix, cat2_ix])
+        print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
+
+        ######## Catboost 3!
+        cat3_ix = 5
+        params = model_params.get_ctune163b()
+        params.pop('use_best_model')
+        model = CatBoostRegressor(**params)
+        model.fit(x_train, y_train)
+        preds_train[val_ix, cat3_ix] = model.predict(x_val)
+        preds_test[:, cat3_ix] += model.predict(df_test.values)
+        score = tools.get_mae_loss(y_val, preds_train[val_ix, cat3_ix])
         print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
 
     preds_test = preds_test / float(n_folds)
     new_train = df_train.copy()
     new_test = df_test.copy()
 
-    model_ixs = [cat_ix, xgb_ix, lgb_ix, keras_ix, cat2_ix]
+    model_ixs = [cat_ix, xgb_ix, lgb_ix, keras_ix, cat2_ix, cat3_ix]
     for model_pred in zip(features_2nd, model_ixs):
         new_train[model_pred[0]] = preds_train[:, model_pred[1]]
         new_test[model_pred[0]] = preds_test[:, model_pred[1]]
 
     print('saving first level preds')
-    tools.write_pickle(new_train[features_2nd], cache_dir + 'ps_train_2ndx5_f{}.pkl'.format(n_folds))
-    tools.write_pickle(new_test[features_2nd], cache_dir + 'ps_test_2ndx5_f{}.pkl'.format(n_folds))
+    tools.write_pickle(new_train[features_2nd], cache_dir + 'ps_train_2ndx{}_f{}.pkl'.format(n_models, n_folds))
+    tools.write_pickle(new_test[features_2nd], cache_dir + 'ps_test_2ndx{}_f{}.pkl'.format(n_models, n_folds))
 
     ## second level predictions
     model = LinearRegression(n_jobs=-1)
