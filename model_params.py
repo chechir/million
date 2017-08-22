@@ -96,7 +96,7 @@ def get_ctune293(y_mean=y_mean):
 
 def get_ctune114b(y_mean=y_mean):
     cat_params = {
-        'iterations': 9999,
+        'iterations': 2000,
         'thread_count': 8,
         'loss_function': 'MAE',
         'auto_stop_pval': 0.01,
@@ -117,7 +117,7 @@ def get_ctune114b(y_mean=y_mean):
 
 def get_ctune163b(y_mean=y_mean):
     cat_params = {
-        'iterations': 9999,
+        'iterations': 3700,
         'thread_count': 8,
         'loss_function': 'MAE',
         'auto_stop_pval': 0.01,

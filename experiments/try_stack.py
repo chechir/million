@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
         ######## Catboost 2!
         cat2_ix = 4
-        params = model_params.get_ctune163b()
+        params = model_params.get_ctune114b()
         params.pop('use_best_model')
         model = CatBoostRegressor(**params)
         model.fit(x_train, y_train)

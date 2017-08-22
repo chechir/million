@@ -6,7 +6,7 @@ from million import data, features, tools
 from million._config import NULL_VALUE, test_columns, test_dates
 from million import model_params
 
-cv_flag = False
+cv_flag = True
 BASELINE_PRED = 0.0110   # Baseline based on mean of training data, per Oleg
 BASELINE_WEIGHT = 0.0059
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     targets = logerror
     df = data.select_features(df)
 
-    params = model_params.get_ctune293()
+    params = model_params.get_ctune163b()
     print df.columns
     if cv_flag:
         df_full_train, targets, df_test = data.split_data(df, logerror)

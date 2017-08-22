@@ -1,13 +1,14 @@
 import numpy as np
 from catboost import CatBoostRegressor
 
-from million import data, features
+from million import data, features, model_params
 from million._config import NULL_VALUE, test_columns, test_dates
 
 seed = 147
 
 def get_catboost():
-    model = CatBoostRegressor(learning_rate=1, depth=32, loss_function='RMSE')
+    params = model_params.get_ctune114b()
+    model = CatBoostRegressor(**params)
     return model
 
 def filter_feats(df):
@@ -33,5 +34,4 @@ if __name__ == '__main__':
 
     model = get_catboost()
     fit_model = model.fit(df_train.values, targets)
-
 
