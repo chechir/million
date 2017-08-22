@@ -1,5 +1,4 @@
 import numpy as np
-import xgboost as xgb
 from sklearn.metrics import mean_squared_error
 
 from million import data, features, tools
@@ -9,22 +8,13 @@ from million import model_params
 cv_flag = True
 seed = 1
 cv_split_ratio = 0.8
-n_bags = 2
+n_bags = 1
 
 LOG_FILE = tools.experiments() + 'millions_try_xgb_.txt'
 logger = tools.get_logger(LOG_FILE)
 
 epochs = 30
 batch_size = 64
-
-
-def normalise_data(train, test):
-    for col_ix in range(train.shape[1]):
-        mean_col = train[:,col_ix].astype(np.float).mean()
-        std_col = train[:,col_ix].astype(np.float).std()
-        train[:,col_ix] = (train[:,col_ix].astype(np.float) - mean_col)/std_col
-        test[:,col_ix] = (test[:,col_ix].astype(np.float) - mean_col)/std_col
-    return train, test
 
 if __name__ == '__main__':
     np.random.seed(seed)
@@ -48,7 +38,7 @@ if __name__ == '__main__':
 
         cv_preds = np.repeat(0., len(df_val))
         for i in range(n_bags):
-            x_train, x_val = normalise_data(df_train.values, df_val.values)
+            x_train, x_val = tools.normalise_data(df_train.values, df_val.values)
             model = model_params.get_keras(x_train.shape[1])
             history = model.fit(
                     x_train, train_targets,

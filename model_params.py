@@ -1,4 +1,9 @@
 
+from keras.layers import Dense, Dropout, Activation
+from keras.layers.advanced_activations import PReLU
+from keras.layers.normalization import BatchNormalization
+from keras.models import Sequential
+
 y_mean = 0.0102590
 
 def get_xtune11k(y_mean=y_mean):
@@ -88,4 +93,20 @@ def get_ctune293(y_mean=y_mean):
         'name': 'experiment',
     }
     return cat_params
+
+def get_keras(num_cols):
+    dropout_rate = 0.20
+    num_units = 30
+
+    model = Sequential()
+    model.add(BatchNormalization(input_shape=(num_cols,)))
+    model.add(Dense(num_units))
+    model.add(Dropout(dropout_rate))
+    model.add(PReLU())
+
+    model.add(Dense(7, init='normal', activation='tanh'))
+    model.add(PReLU())
+    model.add(Dense(1, kernel_initializer='normal'))
+    model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mae'])
+    return model
 

@@ -8,6 +8,14 @@ import seamless as ss
 import logging
 
 
+def normalise_data(train, test):
+    for col_ix in range(train.shape[1]):
+        mean_col = train[:,col_ix].astype(np.float).mean()
+        std_col = train[:,col_ix].astype(np.float).std()
+        train[:,col_ix] = (train[:,col_ix].astype(np.float) - mean_col)/std_col
+        test[:,col_ix] = (test[:,col_ix].astype(np.float) - mean_col)/std_col
+    return train, test
+
 def delete_some_outliers(df, targets):
     outlier_ixs = (targets > 0.419) | (targets < -0.4)
     filter_ixs = np.array([(np.random.normal() > 0.5) & o for o in outlier_ixs])
