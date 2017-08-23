@@ -4,15 +4,17 @@ import xgboost as xgb
 from lightgbm import LGBMRegressor
 from sklearn.linear_model import LinearRegression
 
+seed = 14
+np.random.seed(seed) #keras?
+
 from million import data, tools
 from million._config import NULL_VALUE
 from million import model_params
 
 n_folds = 5
-features_2nd = ['cat_preds', 'xgb_preds', 'lgb_preds', 'ker_preds', 'cat2_preds', 'cat3_preds']
+features_2nd = ['cat_preds', 'xgb_preds', 'lgb_preds', 'ker_preds', 'cat2_preds', 'cat3_preds', 'cat4_preds']
 n_models = len(features_2nd)
 
-seed = 14
 cache_dir = tools.cache_dir()
 
 if __name__ == '__main__':
@@ -112,11 +114,22 @@ if __name__ == '__main__':
         score = tools.get_mae_loss(y_val, preds_train[val_ix, cat3_ix])
         print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
 
+        ######## Catboost 4!
+        cat4_ix = 6
+        params = model_params.get_ctune80()
+        params.pop('use_best_model')
+        model = CatBoostRegressor(**params)
+        model.fit(x_train, y_train)
+        preds_train[val_ix, cat4_ix] = model.predict(x_val)
+        preds_test[:, cat4_ix] += model.predict(df_test.values)
+        score = tools.get_mae_loss(y_val, preds_train[val_ix, cat4_ix])
+        print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
+
     preds_test = preds_test / float(n_folds)
     new_train = df_train.copy()
     new_test = df_test.copy()
 
-    model_ixs = [cat_ix, xgb_ix, lgb_ix, keras_ix, cat2_ix, cat3_ix]
+    model_ixs = [cat_ix, xgb_ix, lgb_ix, keras_ix, cat2_ix, cat3_ix, cat4_ix]
     for model_pred in zip(features_2nd, model_ixs):
         new_train[model_pred[0]] = preds_train[:, model_pred[1]]
         new_test[model_pred[0]] = preds_test[:, model_pred[1]]

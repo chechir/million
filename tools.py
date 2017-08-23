@@ -133,3 +133,4 @@ def convert_to_python_types(dic):
         dic[key] = dic[key].item()
     return dic
 
+subs_dir = dropbox() + 'million/sub/'

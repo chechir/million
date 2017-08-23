@@ -98,7 +98,7 @@ def generate_simple_kaggle_file(predictions, file_name):
     for c in sub.columns[sub.columns != 'ParcelId']:
         sub[c] = predictions
     print( "\nWriting results to disk ..." )
-    sub.to_csv('sub_{}_{}.csv'.format(datetime.now().strftime('%Y%m%d_%H%M%S'), file_name),
+    sub.to_csv(nptools.subs_dir + 'sub_{}_{}.csv'.format(datetime.now().strftime('%Y%m%d_%H%M%S'), file_name),
             index=False, float_format='%.5f')
     print( "\nFinished ..." )
     print( sub.head() )

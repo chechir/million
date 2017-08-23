@@ -87,7 +87,7 @@ def get_ctune293(y_mean=y_mean):
         'random_seed': 18,
         'has_time': False,
         'use_best_model': True,
-        'verbose': True,
+        'verbose': False,
         #'ctr_border_count': 5050,
         #'max_ctr_complexity': 4,
         'name': 'experiment',
@@ -110,7 +110,7 @@ def get_ctune114b(y_mean=y_mean):
         'random_seed': 6705,
         'has_time': False,
         'use_best_model': True,
-        'verbose': True,
+        'verbose': False,
         'name': 'experiment',
     }
     return cat_params
@@ -131,7 +131,7 @@ def get_ctune163b(y_mean=y_mean):
         'random_seed': 6683,
         'has_time': False,
         'use_best_model': True,
-        'verbose': True,
+        'verbose': False,
         'name': 'experiment',
     }
     return cat_params
