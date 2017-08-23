@@ -20,7 +20,8 @@ if __name__ == '__main__':
     print( "\nReading data from disk ...")
     file1 = 'sub_kaggle_plus_bagged_cat20_.7120170803_075809.csv' # 0.0643453
     #file2 = 'sub_20170821_094102_stacked_components_5.csv' # 0.0645256
-    file2 = 'sub_20170821_214002_stacked_comp_x5_f5.csv' # not submitted
+    file2 = 'sub_20170823_093154_stkComp_x6_f5.csv' # not submitted
+    print 'new file: {}'.format(file2)
 
     df1 = pd.read_csv(subs_dir + file1)
     df2 = pd.read_csv(subs_dir + file2)
