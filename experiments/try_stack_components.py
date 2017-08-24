@@ -43,14 +43,18 @@ if __name__ == '__main__':
     train0 = np.zeros(len(new_train))
     test0 = np.zeros(len(new_test))
 
-    #weights = [0.34, 0.02, 0.06, 0.08, 0.02, 0.08, 0.42, .02]
-    #weights = [.79, .02, .07, 0.09, 0.03]
-    weights = [.79, .02, .07, 0.09, 0.03]
+    #weirdness didnt work too well with 0.4, try 0.55
+    #weights = [0.34, 0.02, 0.06, 0.08, 0.02, 0.08, 0.42, .02]  (best cv legal)
+    #weights = [.55, .02, .07, 0.09, 0.02] (weird submission)
+    weights = [.55, .02, .07, 0.17, 0.02, 0.05, 0.04, 0.03, 0.05]
     final_preds = ktools.ensemble_preds(
             (
-                new_train['cat_weird'], new_train['xgb_preds'],
+                new_train['cat_weird'],
+                new_train['xgb_preds'],
                 new_train['lgb_preds'], new_train['ker_preds'],
-                train0
+                train0,
+                new_train['cat_preds'], new_train['cat2_preds'],
+                new_train['cat3_preds'], new_train['cat4_preds'],
             ),
             weights
             )
@@ -60,9 +64,12 @@ if __name__ == '__main__':
     print 'generating predictions for the test set'
     sub_preds = ktools.ensemble_preds(
             (
-                new_test['cat_weird'], new_test['xgb_preds'],
+                new_test['cat_weird'],
+                new_test['xgb_preds'],
                 new_test['lgb_preds'], new_test['ker_preds'],
-                test0
+                test0,
+                new_test['cat_preds'], new_test['cat2_preds'],
+                new_test['cat3_preds'], new_test['cat4_preds'],
             ),
             weights
             )
