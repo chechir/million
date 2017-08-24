@@ -46,7 +46,7 @@ if __name__ == '__main__':
     #weirdness didnt work too well with 0.4, try 0.55
     #weights = [0.34, 0.02, 0.06, 0.08, 0.02, 0.08, 0.42, .02]  (best cv legal)
     #weights = [.55, .02, .07, 0.09, 0.02] (weird submission)
-    weights = [.55, .02, .07, 0.17, 0.02, 0.05, 0.04, 0.03, 0.05]
+    weights = [.50, .02, .07, 0.18, 0.02, 0.07, 0.06, 0.03, 0.05]
     final_preds = ktools.ensemble_preds(
             (
                 new_train['cat_weird'],
