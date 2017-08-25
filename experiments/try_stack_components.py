@@ -28,8 +28,8 @@ if __name__ == '__main__':
 
     new_train0 = tools.read_pickle(cache_dir + 'ps_train_2ndx{}_f{}.pkl'.format(5, n_folds))
     new_test0 = tools.read_pickle(cache_dir + 'ps_test_2ndx{}_f{}.pkl'.format(5, n_folds))
-    new_train['cat_weird'] = new_train['cat_preds'] + new_train['cat4_preds']
-    new_test['cat_weird'] = new_test['cat_preds'] + new_test['cat4_preds']
+    new_train['cat_weird'] = new_train['cat_preds'] + new_train['ker_preds']
+    new_test['cat_weird'] = new_test['cat_preds'] + new_test['ker_preds']
 
     print 'score cat',  tools.get_mae_loss(targets, new_train['cat_preds'])
     print 'score xgb',  tools.get_mae_loss(targets, new_train['xgb_preds'])
