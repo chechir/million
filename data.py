@@ -7,6 +7,7 @@ from million._config import test_columns, NULL_VALUE
 
 import seamless as ss
 
+train_cv_ratio = 0.6
 
 FEATS_NOT_TO_USE = ['logerror', 'transactiondate', 'parcelid', 'ParcelId']
 df_path = nptools.dropbox() + '/million/cache/full_df.pkl'
@@ -64,7 +65,7 @@ def select_features(df):
 
 
 def filter_cols(df):
-    not_wanted_feats = ['parcelid', 'logerror', 'transactiondate']
+    not_wanted_feats = ['parcelid', 'logerror', 'transactiondate', 'train_ixs']
     final_cols = [col for col in df.columns if col not in not_wanted_feats]
     return df[final_cols]
 
@@ -79,10 +80,19 @@ def encode_labels(df):
     return df
 
 
-def get_ixs(targets):
+def get_lb_ixs(targets):
     test_ixs = targets == NULL_VALUE
     train_ixs = ~test_ixs
     return train_ixs, test_ixs
+
+
+def get_cv_ixs(df, targets):
+    train_ixs, _ = get_lb_ixs(targets)
+    train_df = df.iloc[train_ixs]
+    new_targets = targets[train_ixs]
+    cutoff = int(len(train_df) * train_cv_ratio)
+    new_train_ixs = np.array([True]*cutoff + [False]*(len(train_df) - cutoff))
+    return train_df, new_targets, new_train_ixs, ~new_train_ixs
 
 
 def add_month_and_year(df):
