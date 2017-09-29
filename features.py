@@ -1,23 +1,39 @@
-from million import tools as nptools
+from functools import partial
 import numpy as np
 import pandas as pd
-from million.tools import get_test_ixs
+import seamless as ss
+from million import tools as nptools
 
-def add_features(df):
-    #df['cnt_censustractandblock'] = column_count(df, 'censustractandblock')
-    #df['cnt_parcelid'] = column_count(df, df['parcelid'].values)
-    #df['cnt_regionidcity'] = column_count(df, 'regionidcity')
-    #df['cnt_regionidzip'] = column_count(df, 'regionidzip')
-    #df['cnt_propertylandusetypeid'] = column_count(df, 'propertylandusetypeid')
-    #df['cnt_propertycountylandusecode'] = column_count(df, 'propertycountylandusecode')
-    cnt_cols = ['propertylandusetypeid']
-    for col in cnt_cols:
-        df['cnt_'+ col] = column_count(df, col)
 
-    #df = add_ranks(df, 'regionidzip') #df = add_ranks(df, 'propertycountylandusecode')
-    #df = add_datefeats(df)
-
+def add_features(df, train_ixs):
+    #cnt_cols = ['propertylandusetypeid']
+    #for col in cnt_cols:
+    #    df['cnt_' + col] = column_count(df, col)
+    # df = add_ranks(df, 'regionidzip') #df = add_ranks(df, 'propertycountylandusecode')
+    # df = add_datefeats(df)
     return df
+
+
+def quasi_medians(x):
+    v, train_ixs = x['logerror'], x['train_ixs'].astype(bool)
+    v_train = v[train_ixs]
+    train_length = len(v_train)
+    result = np.nan * np.zeros(len(v))
+    result[~train_ixs] = np.median(v_train)
+    for i, value in enumerate(v_train):
+        other_ixs = np.ones(train_length, dtype=bool)
+        other_ixs[i] = False
+        result_train = result[train_ixs]
+        result_train[~other_ixs] = np.median(v_train[other_ixs])
+        result[train_ixs] = result_train
+    return result
+
+
+def grouped_quasi_medians(df, train_ixs, groupby):
+    df['train_ixs'] = train_ixs
+    result_grouped = df.groupby(groupby).apply(quasi_medians)
+    return np.hstack(result_grouped)
+
 
 def add_datefeats(df):
     tdate = pd.to_datetime(df["transactiondate"])
@@ -25,18 +41,6 @@ def add_datefeats(df):
     df['transactiondate'] = tdate.dt.quarter
     return df
 
-def get_train_df(df):
-    test_ixs = get_test_ixs(df['logerror'].values)
-    train_df = df.iloc[~test_ixs]
-    return train_df
-
-def column_count(df, col):
-    train_df = get_train_df(df)
-    group_ixs = nptools.get_group_ixs(train_df[col].values)
-    result = np.nan * np.zeros(len(df))
-    for key, group_ix in group_ixs.iteritems():
-        result[df[col]==key] = len(group_ix)
-    return result
 
 def add_ranks(df, groupby):
     scores = ['yearbuilt', 'longitude', 'latitude']
@@ -50,6 +54,7 @@ def add_ranks(df, groupby):
         df[feats[1]] = feats[0]
     return df
 
+
 def rank_by_column(values, race_id, normalised=True):
     result = np.nan * np.zeros(len(values))
     group_ixs = nptools.get_group_ixs(race_id)
@@ -61,34 +66,3 @@ def rank_by_column(values, race_id, normalised=True):
         if normalised:
             result[group_ix] = result[group_ix] / float(len(group_ix))
     return result
-
-def add_quasi_ratios(train_df, val_df, targets):
-    train=train_df.copy()
-    val=val_df.copy()
-    train["id"] = np.arange(train.shape[0])
-    val["id"] = np.arange(val.shape[0])
-
-    for col in ['regionidzip', 'regionidneighborhood']:
-        feat_train, feat_test = calc_quasi_targets(train, val, targets, col)
-        train_df['quasi_{}'.format(col)] = feat_train
-        val_df['quasi_{}'.format(col)] = feat_test
-    return train_df, val_df
-
-def calc_quasi_targets(train, val, Y_train, groupby):
-    train['outcome'] = Y_train
-    #val['players_key']=val["player_id"]
-
-    train_stats = train[[groupby, 'outcome']].groupby(groupby).agg(['sum', 'count'])
-    train_stats.columns = train_stats.columns.droplevel(0)
-    train_stats2 = train.merge(train_stats, how='left', left_on=groupby, right_index=True)[["id",groupby, "sum", "count", "outcome"]]
-    train_stats2["players_avg"] = (train_stats2["sum"] - train_stats2["outcome"]) / (train_stats2["count"] - 1)
-    train_stats2["players_avg"].fillna(-1, inplace=True)
-
-    players_win_stat_val = val.merge(train_stats, how='left', left_on=groupby, right_index=True)[["id",groupby, "sum", "count"]]
-    players_win_stat_val["players_avg"] = (players_win_stat_val["sum"]) / (players_win_stat_val["count"])
-    players_win_stat_val["players_avg"].fillna(-1, inplace=True)
-
-    train=train.merge(train_stats2[["id", "players_avg"]], how="left", left_on="id", right_on="id")
-    val=val.merge(players_win_stat_val[["id", "players_avg"]], how="left", left_on="id", right_on="id")
-    return(train, val)
-
