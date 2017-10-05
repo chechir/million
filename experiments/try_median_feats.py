@@ -47,4 +47,4 @@ if __name__ == '__main__':
 
     if not evaluate_cv:
         predictions = model.predict(df_test)
-        data.generate_simple_kaggle_file(predictions, 'sub/sub_singlelgb_quasies')
+        data.generate_simple_kaggle_file(predictions, 'sub_singlelgb_quasies')
