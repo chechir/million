@@ -4,14 +4,40 @@ import pandas as pd
 import seamless as ss
 from million import tools as nptools
 
+BASELINE_PRED = 0.0115   # Baseline based on mean of training data, per Oleg
+
 
 def add_features(df, train_ixs):
-    #cnt_cols = ['propertylandusetypeid']
-    #for col in cnt_cols:
-    #    df['cnt_' + col] = column_count(df, col)
-    # df = add_ranks(df, 'regionidzip') #df = add_ranks(df, 'propertycountylandusecode')
-    # df = add_datefeats(df)
+    qmedian_cols = ['regionidzip', 'propertylandusetypeid']
+#    0.0656769900765 (BM)
+    for col in qmedian_cols:
+        df['qmedian_' + col] = grouped_quasi_medians(df, train_ixs, groupby=col)
+        print col
     return df
+
+
+def grouped_quasi_medians(df, train_ixs, groupby):
+    df['train_ixs'] = train_ixs
+    result_grouped = df.groupby(groupby).apply(quasi_medians)
+    return np.hstack(result_grouped)
+
+
+def quasi_medians_old(x):
+    v, train_ixs = x['logerror'], x['train_ixs'].astype(bool)
+    v_train = v[train_ixs]
+    train_length = len(v_train)
+    result = np.nan * np.zeros(len(v))
+    result[~train_ixs] = np.median(v_train)
+    i = 0
+    for i in range(len(v_train)):
+        other_ixs = np.ones(train_length, dtype=bool)
+        other_ixs[i] = False
+        result_train = result[train_ixs]
+        result_train[~other_ixs] = np.median(v_train[other_ixs])
+        result[train_ixs] = result_train
+    print 'processed {} elements'.format(i)
+    result = ss.fillna(BASELINE_PRED)
+    return result
 
 
 def quasi_medians(x):
@@ -20,19 +46,15 @@ def quasi_medians(x):
     train_length = len(v_train)
     result = np.nan * np.zeros(len(v))
     result[~train_ixs] = np.median(v_train)
-    for i, value in enumerate(v_train):
+    i = 0
+    for i in range(len(v_train)):
         other_ixs = np.ones(train_length, dtype=bool)
         other_ixs[i] = False
         result_train = result[train_ixs]
         result_train[~other_ixs] = np.median(v_train[other_ixs])
         result[train_ixs] = result_train
+    print 'processed {} elements'.format(i)
     return result
-
-
-def grouped_quasi_medians(df, train_ixs, groupby):
-    df['train_ixs'] = train_ixs
-    result_grouped = df.groupby(groupby).apply(quasi_medians)
-    return np.hstack(result_grouped)
 
 
 def add_datefeats(df):
