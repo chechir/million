@@ -23,9 +23,9 @@ def get_xtune11k(y_mean=y_mean):
     }
     return xgb_params
 
-def get_ltune7k(y_mean=y_mean):
+def get_ltune7k(y_mean=y_mean, num_rounds=1830):
     lgb_params = {
-        'n_estimators': 1830,
+        'n_estimators': num_rounds,
         'boosting_type': 'gbdt',
         'metric': 'mae',
         'objective': 'regression',
@@ -45,6 +45,7 @@ def get_ltune7k(y_mean=y_mean):
         'colsample_bytree': 0.61111511025,
         'min_hessian': 0.145983080031,
         'seed': 3073881,
+        'early_stopping_rounds': 80,
         }
     return lgb_params
 
