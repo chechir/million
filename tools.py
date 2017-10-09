@@ -4,6 +4,14 @@ import os
 import logging
 
 
+def remove_ouliers(df):
+    low_outlier_ixs = (df['logerror'].values < -0.4) & (df['logerror'].values != NULL_VALUE)
+    high_outlier_ixs = df['logerror'].values > 0.41
+    outlier_ixs = low_outlier_ixs | high_outlier_ixs
+    result_df = df.iloc[~outlier_ixs]
+    return result_df
+
+
 def normalise_data(train, test):
     for col_ix in range(train.shape[1]):
         mean_col = train[:, col_ix].astype(np.float).mean()

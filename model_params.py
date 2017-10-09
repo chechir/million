@@ -49,6 +49,7 @@ def get_ltune7k(y_mean=y_mean, num_rounds=1830):
         }
     return lgb_params
 
+
 def get_ctune80(y_mean=y_mean):
     cat_params = {
         'iterations': 8352 + 10,
@@ -71,6 +72,7 @@ def get_ctune80(y_mean=y_mean):
         'name': 'experiment',
     }
     return cat_params
+
 
 def get_ctune293(y_mean=y_mean):
     cat_params = {
@@ -95,6 +97,7 @@ def get_ctune293(y_mean=y_mean):
     }
     return cat_params
 
+
 def get_ctune114b(y_mean=y_mean):
     cat_params = {
         'iterations': 2000,
@@ -116,6 +119,7 @@ def get_ctune114b(y_mean=y_mean):
     }
     return cat_params
 
+
 def get_ctune163b(y_mean=y_mean):
     cat_params = {
         'iterations': 3700,
@@ -136,6 +140,7 @@ def get_ctune163b(y_mean=y_mean):
         'name': 'experiment',
     }
     return cat_params
+
 
 def get_keras(num_cols):
     dropout_rate = 0.20
