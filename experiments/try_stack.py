@@ -67,7 +67,7 @@ if __name__ == '__main__':
         svr_ix = 9
         model = SVR()
         print x_train_small.shape
-        model.fit(x_train_small[-2100:, :], y_train[-2100:])
+        model.fit(x_train_small[-4333:, :], y_train[-4333:])
         preds_train[val_ix, svr_ix] = model.predict(x_val_small)
         preds_test[:, svr_ix] += model.predict(df_test_small.values)
         score = tools.get_mae_loss(y_val, preds_train[val_ix, svr_ix])

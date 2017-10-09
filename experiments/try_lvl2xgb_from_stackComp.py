@@ -1,24 +1,38 @@
 import numpy as np
-from scipy.optimize import minimize
 from functools import partial
+import xgboost as xgb
 
 from million import tools, data
 from million._config import NULL_VALUE
 from million.experiments.try_stack import n_folds, n_models
 from kfuncs import tools as ktools
 import seamless as ss
+from scipy.optimize import minimize
+
+cache_dir = tools.cache_dir()
+LOG_FILE = tools.experiments() + 'millions_try_stackcomp.txt'
+
+
+def get_lvl2():
+    xgb_params = {
+        'objective': 'reg:linear',
+        'gamma': 0.0001,
+        'eta': 0.1,
+        'max_depth': 2,
+        'subsample': 0.5,
+        'colsample_bytree': 0.5,
+        'eval_metric': 'mae',
+        'seed': 777,
+        'base_score': 0.01026,
+        'silent': 1
+    }
+    return xgb_params
 
 
 def optimise_weights(preds, targets, init_weights, minimise=True):
     constraints = (
             {'type': 'eq', 'fun': lambda w: 1-sum(w)},
             )
-    # weirdness:
-    # constraints =(
-    #        {'type':'eq','fun':lambda w: 1-sum(w)},
-    #        {'type':'eq','fun':lambda w: 0.5 - w[0]}, #weirdness constraint
-    #        {'type':'eq','fun':lambda w: 0.17 - w[5]}) #weirdness constraint
-    # our weights are bound between 0 and 1
     bounds = [(-1, 1)]*len(preds)
     func = partial(optim_func, preds=preds, targets=targets)
     result = minimize(
@@ -41,9 +55,8 @@ def convert_preds_to_list(df):
     return result
 
 
-cache_dir = tools.cache_dir()
-LOG_FILE = tools.experiments() + 'millions_try_stackcomp.txt'
 if __name__ == '__main__':
+    weight = 0.5
     logger = tools.get_logger(LOG_FILE)
     df = data.load_data(from_cache=True)
     df = tools.remove_ouliers(df)
@@ -58,23 +71,21 @@ if __name__ == '__main__':
 
     new_train = ss.io.read_pickle(cache_dir + 'ps2_train_2ndx{}_f{}.pkl'.format(n_models, n_folds))
     new_test = ss.io.read_pickle(cache_dir + 'ps2_test_2ndx{}_f{}.pkl'.format(n_models, n_folds))
-    cols = new_train.columns
 
-#    new_train['cat_weird'] = new_train['cat_preds'] + new_train['ker_preds']
-#    new_test['cat_weird'] = new_test['cat_preds'] + new_test['ker_preds']
-#    new_train['zero'] = np.repeat(0, len(new_train))
-#    new_test['zero'] = np.repeat(0, len(new_test))
-#    cols = ['cat_weird', 'zero'] + list(cols)
+    params = get_lvl2()
+    dtrain = xgb.DMatrix(new_train.values, train_targets)
+    dtest = xgb.DMatrix(new_test.values)
+    model = xgb.train(
+            params,
+            dtrain, num_boost_round=300, verbose_eval=2
+            )
+    preds_train_xgb = model.predict(dtrain)
+    preds_test_xgb = model.predict(dtest)
+    score = tools.get_mae_loss(train_targets, preds_train_xgb)
+    print('train score:{}'.format(score))
 
-    for col in cols:
-        print 'score {}'.format(col),  tools.get_mae_loss(train_targets, new_train[col].values)
-
-    new_train = new_train[cols]
-    new_test = new_test[cols]
-
+    #  ############OPTIM
     init_weights = np.repeat(0.1, n_models)
-#    init_weights = [0.1 0.1, 0.1, 0.1, 0.06, 0.08, 0.02, 0.08, 0.42] # (best cv legal)
-
     all_train_preds = convert_preds_to_list(new_train)
     optim = optimise_weights(
             all_train_preds, train_targets, init_weights, minimise=True)
@@ -97,10 +108,12 @@ if __name__ == '__main__':
 
     print 'generating predictions for the test set'
     all_test_preds = convert_preds_to_list(new_test)
-    sub_preds = ktools.ensemble_preds(all_test_preds, optimised_weights)
+    optim_preds = ktools.ensemble_preds(all_test_preds, optimised_weights)
 
-    sub_file_name = 'stkOptim_x{}_f{}'.format(n_models, n_folds)
-    data.generate_simple_kaggle_file(sub_preds, sub_file_name)
-    msg = 'score ens:{}, w:{}.weights, file:{}'.format(score, optimised_weights, sub_file_name)
-    logger.debug(msg)
-
+    final_preds = preds_test_xgb * weight + optim_preds*(1 - weight)
+    final_preds = final_preds * 1.1
+    sub_file_name = 'stkOptim_and_xgbLvl2_x{}_f{}'.format(n_models, n_folds)
+    data.generate_simple_kaggle_file(final_preds, sub_file_name)
+    score = tools.get_mae_loss(train_targets, final_preds)
+    print('train score:{}'.format(score))
+    # msg = 'score ens:{}, w:{}.weights, file:{}'.format(score, optimised_weights, sub_file_name)
