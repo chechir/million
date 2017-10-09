@@ -6,6 +6,7 @@ from keras.models import Sequential
 
 y_mean = 0.0102590
 
+
 def get_xtune11k(y_mean=y_mean):
     xgb_params = {
         'objective': 'reg:linear',
@@ -22,6 +23,7 @@ def get_xtune11k(y_mean=y_mean):
         'silent': 1
     }
     return xgb_params
+
 
 def get_ltune7k(y_mean=y_mean, num_rounds=1830):
     lgb_params = {
@@ -140,6 +142,19 @@ def get_ctune163b(y_mean=y_mean):
         'name': 'experiment',
     }
     return cat_params
+
+
+def get_lgbkernel():
+    params = {}
+    params['metric'] = 'mae'
+    params['max_depth'] = 100
+    params['num_leaves'] = 32
+    params['feature_fraction'] = .85
+    params['bagging_fraction'] = .95
+    params['bagging_freq'] = 8
+    params['learning_rate'] = 0.0025
+    params['verbosity'] = 0
+    return params
 
 
 def get_keras(num_cols):
