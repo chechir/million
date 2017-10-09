@@ -17,13 +17,19 @@ def load_data(from_cache=False):
     if from_cache:
         df = ss.io.read_pickle(df_path)
     else:
+        print('Loading data...')
         train = pd.read_csv('../input/train_2016_v2.csv')
+        train_2017 = pd.read_csv('../input/train_2017.csv')
         prop = pd.read_csv('../input/properties_2016.csv')
+        prop2017 = pd.read_csv('../input/properties_2017.csv')
         sample = pd.read_csv('../input/sample_submission.csv')
         prop = _fix_types(prop)
-        df_train = train.merge(prop, how='left', on='parcelid')
+        prop2017 = _fix_types(prop2017)
+        df_train2016 = train.merge(prop, how='left', on='parcelid')
+        df_train2017 = train_2017.merge(prop2017, how='left', on='parcelid')
+        df_train = pd.concat([df_train2016, df_train2017], axis=0)
         sample['parcelid'] = sample['ParcelId']
-        df_test = sample.merge(prop, how='left', on='parcelid')
+        df_test = sample.merge(prop2017, how='left', on='parcelid')
         df = create_fulldf(df_train, df_test)
         df = df.fillna(NULL_VALUE)
         df = clean_data(df)
