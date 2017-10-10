@@ -2,7 +2,10 @@ import numpy as np
 from functools import partial
 import xgboost as xgb
 
-from million import tools, data
+seed = 1
+np.random.seed(seed)
+
+from million import tools, data, model_params
 from million._config import NULL_VALUE
 from million.experiments.try_stack import n_folds, n_models
 from kfuncs import tools as ktools
@@ -55,7 +58,7 @@ def convert_preds_to_list(df):
 
 
 if __name__ == '__main__':
-    weight = 0.5
+    weights = [0.45, 0.45, 0.1]
     logger = tools.get_logger(LOG_FILE)
     df = data.load_data(from_cache=True)
     df = tools.remove_ouliers(df)
@@ -71,6 +74,7 @@ if __name__ == '__main__':
     new_train = ss.io.read_pickle(cache_dir + 'ps2_train_2ndx{}_f{}.pkl'.format(n_models, n_folds))
     new_test = ss.io.read_pickle(cache_dir + 'ps2_test_2ndx{}_f{}.pkl'.format(n_models, n_folds))
 
+    print('XGBoost... ')
     params = get_lvl2()
     dtrain = xgb.DMatrix(new_train.values, train_targets)
     dtest = xgb.DMatrix(new_test.values)
@@ -89,7 +93,24 @@ if __name__ == '__main__':
     score = tools.get_mae_loss(train_targets, preds_train_xgb)
     print('train score:{}'.format(score))
 
+    #  ############Keras
+    print('nnet... ')
+    x_train = new_train.values
+    x_test = new_test.values
+    model = model_params.get_lvl2nn(x_train.shape[1])
+    batch_size = 256
+    epochs = 10
+    history = model.fit(
+            x_train, train_targets,
+            nb_epoch=epochs, batch_size=batch_size)
+    model.history = history
+    preds_train_nn = model.predict(x_train).squeeze()
+    preds_test_nn = model.predict(x_test).squeeze()
+    score = tools.get_mae_loss(train_targets, preds_train_nn)
+    print('train score:{}'.format(score))
+
     #  ############OPTIM
+    print('Optim... ')
     init_weights = np.repeat(0.1, n_models)
     all_train_preds = convert_preds_to_list(new_train)
     optim = optimise_weights(
@@ -111,14 +132,16 @@ if __name__ == '__main__':
     score = tools.get_mae_loss(train_targets, train_preds)
     print 'score ens with optim:', score, optimised_weights
 
-    print 'generating predictions for the test set'
     all_test_preds = convert_preds_to_list(new_test)
     optim_preds = ktools.ensemble_preds(all_test_preds, optimised_weights)
 
-    final_preds = preds_test_xgb * weight + optim_preds*(1 - weight)
+    print 'generating predictions for the test set. weiths:{}'.format(weights)
+    final_preds = tools.ensemble_preds([preds_test_xgb, optim_preds, preds_test_nn], weights)
     final_preds = final_preds * 1.1
-    sub_file_name = 'stkOptim_and_xgbLvl2_x{}_f{}'.format(n_models, n_folds)
+
+    sub_file_name = 'stk_3lvl2_models_x{}_f{}'.format(n_models, n_folds)
     data.generate_simple_kaggle_file(final_preds, sub_file_name)
-    score = tools.get_mae_loss(train_targets, final_preds)
+    final_preds_train = tools.ensemble_preds([preds_train_xgb, train_preds, preds_train_nn], weights)
+    score = tools.get_mae_loss(train_targets, final_preds_train)
     print('train score:{}'.format(score))
     # msg = 'score ens:{}, w:{}.weights, file:{}'.format(score, optimised_weights, sub_file_name)
