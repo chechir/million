@@ -67,7 +67,7 @@ if __name__ == '__main__':
         svr_ix = 9
         model = SVR()
         print x_train_small.shape
-        model.fit(x_train_small[-4333:, :], y_train[-4333:])
+        model.fit(x_train_small[:4555, :], y_train[:4555])
         preds_train[val_ix, svr_ix] = model.predict(x_val_small)
         preds_test[:, svr_ix] += model.predict(df_test_small.values)
         score = tools.get_mae_loss(y_val, preds_train[val_ix, svr_ix])
@@ -145,13 +145,14 @@ if __name__ == '__main__':
         print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train),
               len(x_val), i, score))
 
-        # knn !
-        knn_ix = 6
-        model = KNeighborsRegressor(n_neighbors=20)
+        # lgb2 !
+        lgb2_ix = 6
+        params = model_params.get_lgbkernel()
+        model = LGBMRegressor(**params)
         model.fit(x_train, y_train)
-        preds_train[val_ix, knn_ix] = model.predict(x_val)
-        preds_test[:, knn_ix] += model.predict(df_test.values)
-        score = tools.get_mae_loss(y_val, preds_train[val_ix, knn_ix])
+        preds_train[val_ix, lgb2_ix] = model.predict(x_val)
+        preds_test[:, lgb2_ix] += model.predict(df_test_small.values)
+        score = tools.get_mae_loss(y_val, preds_train[val_ix, lgb2_ix])
         print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
 
         # ridge !
@@ -186,7 +187,7 @@ if __name__ == '__main__':
     new_train = df_train.copy()
     new_test = df_test.copy()
 
-    model_ixs = [cat_ix, xgb_ix, lgb_ix, keras_ix, cat2_ix, et_ix, knn_ix, ridge_ix, rfr_ix, svr_ix, knn2_ix]
+    model_ixs = [cat_ix, xgb_ix, lgb_ix, keras_ix, cat2_ix, et_ix, lgb2_ix, ridge_ix, rfr_ix, svr_ix, knn2_ix]
     for model_pred in zip(features_2nd, model_ixs):
         new_train[model_pred[0]] = preds_train[:, model_pred[1]]
         new_test[model_pred[0]] = preds_test[:, model_pred[1]]

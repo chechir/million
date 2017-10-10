@@ -44,7 +44,6 @@ def optimise_weights(preds, targets, init_weights, minimise=True):
 def optim_func(weights, preds, targets):
     final_prediction = ktools.ensemble_preds(preds, weights)
     score = 1000000*tools.get_mae_loss(final_prediction, targets)
-    print score, '*', weights
     return score
 
 
@@ -75,12 +74,18 @@ if __name__ == '__main__':
     params = get_lvl2()
     dtrain = xgb.DMatrix(new_train.values, train_targets)
     dtest = xgb.DMatrix(new_test.values)
-    model = xgb.train(
-            params,
-            dtrain, num_boost_round=300, verbose_eval=2
-            )
-    preds_train_xgb = model.predict(dtrain)
-    preds_test_xgb = model.predict(dtest)
+    preds_train_xgb = np.zeros(len(new_train))
+    preds_test_xgb = np.zeros(len(new_test))
+    n_bags = 5
+    for i in range(n_bags):
+        model = xgb.train(
+                params,
+                dtrain, num_boost_round=300, verbose_eval=2
+                )
+        preds_train_xgb += model.predict(dtrain)
+        preds_test_xgb += model.predict(dtest)
+    preds_train_xgb /= n_bags
+    preds_test_xgb /= n_bags
     score = tools.get_mae_loss(train_targets, preds_train_xgb)
     print('train score:{}'.format(score))
 
