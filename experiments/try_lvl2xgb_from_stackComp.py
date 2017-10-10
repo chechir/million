@@ -58,7 +58,7 @@ def convert_preds_to_list(df):
 
 
 if __name__ == '__main__':
-    weights = [0.45, 0.45, 0.1]
+    weights = [0.40, 0.35, 0.25]
     logger = tools.get_logger(LOG_FILE)
     df = data.load_data(from_cache=True)
     df = tools.remove_ouliers(df)
