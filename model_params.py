@@ -173,3 +173,17 @@ def get_keras(num_cols):
     model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mae'])
     return model
 
+
+def get_lvl2nn(num_cols):
+    dropout_rate = 0.25
+    num_units = 7
+
+    model = Sequential()
+    model.add(BatchNormalization(input_shape=(num_cols,)))
+    model.add(Dense(num_units))
+    model.add(Dropout(dropout_rate))
+    #model.add(Dense(3, init='normal', activation='tanh'))
+    model.add(PReLU())
+    model.add(Dense(1, kernel_initializer='normal'))
+    model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mae'])
+    return model
