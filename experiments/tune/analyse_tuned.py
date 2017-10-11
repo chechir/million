@@ -18,14 +18,14 @@ cat_columns = ['learning_rate', 'depth', 'l2_leaf_reg', 'rsm', 'bagging_temperat
 #mlp_columns = ['num_layers', 'dropout', 'dropout_decrease', 'num_units', 'batch_size']
 # ss tuner
 
-binent = 'mae'
+mae = 'mae'
 kelly = 'mse'
 
 def plot_kelly_bin(df):
     pal = sns.color_palette()
-    plt.scatter(df[binent], df[kelly], alpha=0.8, color=pal[0], label='Kelly / bin_ent')
-    plt.xlabel('bin_ent')
-    plt.ylabel('kelly_edge')
+    plt.scatter(df[mae], df[kelly], alpha=0.8, color=pal[0], label='Kelly / bin_ent')
+    plt.xlabel('mae')
+    plt.ylabel('mse')
     plt.legend()
     plt.show()
 
@@ -45,13 +45,13 @@ if __name__ == '__main__':
     #df = ss.DDF.from_csv(TUNING_RESULTS_PATH)
     df = tools.read_special_json(TUNING_RESULTS_PATH)
     print 'df shape', df.shape
-    best_bin_ix = np.argmin(df[binent])
+    best_bin_ix = np.argmin(df[mae])
     best_kelly_ix = np.argmax(df[kelly])
     print df.rowslice(best_bin_ix)
     #print df.rowslice(best_kelly_ix)
     print 'both the same best?:', best_kelly_ix == best_bin_ix
     plot_kelly_bin(df)
-    #loss = binent
+    #loss = mae
     #plot_losses_against_params(df, loss)
 
 

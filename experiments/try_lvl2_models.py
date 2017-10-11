@@ -5,15 +5,34 @@ import xgboost as xgb
 seed = 1
 np.random.seed(seed)
 
+import pandas as pd
 from million import tools, data, model_params
 from million._config import NULL_VALUE
-from million.experiments.try_stack import n_folds, n_models
+from million.experiments.try_stack import n_folds, n_models as n_models1
+from million.experiments.try_stack2 import n_models as n_models2
 from kfuncs import tools as ktools
 import seamless as ss
 from scipy.optimize import minimize
 
+n_models = n_models1 + n_models2
 cache_dir = tools.cache_dir()
 LOG_FILE = tools.experiments() + 'millions_try_stackcomp.txt'
+
+
+def get_lvl2():
+    xgb_params = {
+        'objective': 'reg:linear',
+        'gamma': 0.0001,
+        'eta': 0.1,
+        'max_depth': 2,
+        'subsample': 0.5,
+        'colsample_bytree': 0.5,
+        'eval_metric': 'mae',
+        'seed': 777,
+        'base_score': 0.01026,
+        'silent': 1
+    }
+    return xgb_params
 
 
 def optimise_weights(preds, targets, init_weights, minimise=True):
@@ -41,22 +60,25 @@ def convert_preds_to_list(df):
     return result
 
 
+def get_new_guys():
+    train = ss.io.read_pickle(cache_dir + 'ps2_train_2ndx{}_f{}.pkl'.format(n_models1, n_folds))
+    test = ss.io.read_pickle(cache_dir + 'ps2_test_2ndx{}_f{}.pkl'.format(n_models1, n_folds))
+    train2 = ss.io.read_pickle(cache_dir + 'ps2_train2_2ndx{}_f{}.pkl'.format(n_models2, n_folds))
+    test2 = ss.io.read_pickle(cache_dir + 'ps2_test2_2ndx{}_f{}.pkl'.format(n_models2, n_folds))
+    return pd.concat([train, train2], axis=1), pd.concat([test, test2], axis=1)
+
+
 if __name__ == '__main__':
-    weights = [0.40, 0.35, 0.25]
     logger = tools.get_logger(LOG_FILE)
     df = data.load_data(from_cache=True)
     df = tools.remove_ouliers(df)
     targets = df['logerror'].values
-
     train_ixs, test_ixs = data.get_lb_ixs(targets)
-    # df = features.add_features(df, train_ixs)
-
     df = data.select_features(df)
     df_train, train_targets = df.iloc[train_ixs], targets[train_ixs]
     df_test = df.iloc[test_ixs]
 
-    new_train = ss.io.read_pickle(cache_dir + 'ps2_train_2ndx{}_f{}.pkl'.format(n_models, n_folds))
-    new_test = ss.io.read_pickle(cache_dir + 'ps2_test_2ndx{}_f{}.pkl'.format(n_models, n_folds))
+    new_train, new_test = get_new_guys()
 
     print('XGBoost... ')
     params = model_params.get_lvl2()
@@ -64,7 +86,7 @@ if __name__ == '__main__':
     dtest = xgb.DMatrix(new_test.values)
     preds_train_xgb = np.zeros(len(new_train))
     preds_test_xgb = np.zeros(len(new_test))
-    n_bags = 5
+    n_bags = 7
     for i in range(n_bags):
         model = xgb.train(
                 params,
@@ -102,7 +124,7 @@ if __name__ == '__main__':
     print "-", optim.fun
     optimised_weights = optim.x
 
-    for i in range(30):
+    for i in range(40):
         optim = optimise_weights(
                 all_train_preds, train_targets, optimised_weights, minimise=True)
         optimised_weights = optim.x
@@ -119,13 +141,14 @@ if __name__ == '__main__':
     all_test_preds = convert_preds_to_list(new_test)
     optim_preds = ktools.ensemble_preds(all_test_preds, optimised_weights)
 
+    weights = [0.45, 0.35, 0.20]
     print 'generating predictions for the test set. weiths:{}'.format(weights)
     final_preds = tools.ensemble_preds([preds_test_xgb, optim_preds, preds_test_nn], weights)
     final_preds = final_preds * 1.1
 
-    sub_file_name = 'stk_3lvl2_models_x{}_f{}'.format(n_models, n_folds)
-    data.generate_simple_kaggle_file(final_preds, sub_file_name)
     final_preds_train = tools.ensemble_preds([preds_train_xgb, train_preds, preds_train_nn], weights)
     score = tools.get_mae_loss(train_targets, final_preds_train)
     print('train score:{}'.format(score))
-    # msg = 'score ens:{}, w:{}.weights, file:{}'.format(score, optimised_weights, sub_file_name)
+
+    sub_file_name = 'stk_3lvl2_models_x{}_f{}'.format(n_models, n_folds)
+    data.generate_simple_kaggle_file(final_preds, sub_file_name)

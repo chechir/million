@@ -144,6 +144,28 @@ def get_ctune163b(y_mean=y_mean):
     return cat_params
 
 
+def get_ctune729c():
+    cat_params = {
+        'iterations': 150,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'auto_stop_pval': 0.01,
+        'learning_rate': 0.01,
+        'depth': 8,
+        'l2_leaf_reg': 11,
+        'rsm': 0.82847085,
+        'bagging_temperature': 0.95144918,
+        'fold_permutation_block_size': 3,
+        'gradient_iterations': 1,
+        'random_seed': 2716,
+        'has_time': True,
+        'use_best_model': True,
+        'verbose': False,
+        'name': 'ctune729c',
+    }
+    return cat_params
+
+
 def get_lgbkernel():
     params = {}
     params['metric'] = 'mae'
@@ -187,3 +209,19 @@ def get_lvl2nn(num_cols):
     model.add(Dense(1, kernel_initializer='normal'))
     model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mae'])
     return model
+
+
+def get_lvl2():
+    xgb_params = {
+        'objective': 'reg:linear',
+        'gamma': 0.0001,
+        'eta': 0.1,
+        'max_depth': 2,
+        'subsample': 0.5,
+        'colsample_bytree': 0.5,
+        'eval_metric': 'mae',
+        'seed': 777,
+        'base_score': 0.01026,
+        'silent': 1
+    }
+    return xgb_params

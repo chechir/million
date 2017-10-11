@@ -1,7 +1,9 @@
 from million._config import NULL_VALUE
 import numpy as np
+import json
 import os
 import logging
+import seamless as ss
 
 
 def remove_ouliers(df):
@@ -70,6 +72,23 @@ def convert_to_python_types(dic):
     for key in dic:
         dic[key] = dic[key].item()
     return dic
+
+
+def write_results_to_json(results_dict, path):
+    with open(path, 'a') as f:
+        json_format_data = json.dumps(results_dict)
+        f.write(json_format_data + '\n')
+
+
+def read_special_json(path):
+    with open(path, 'r') as f:
+        raw = f.read()
+    raw_data = raw.split('\n')
+    data = []
+    for d in raw_data:
+        if d:
+            data.append(json.loads(d))
+    return ss.DDF(data)
 
 
 subs_dir = dropbox() + 'million/sub/'
