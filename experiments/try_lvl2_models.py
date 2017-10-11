@@ -65,7 +65,8 @@ def get_new_guys():
     test = ss.io.read_pickle(cache_dir + 'ps2_test_2ndx{}_f{}.pkl'.format(n_models1, n_folds))
     train2 = ss.io.read_pickle(cache_dir + 'ps2_train2_2ndx{}_f{}.pkl'.format(n_models2, n_folds))
     test2 = ss.io.read_pickle(cache_dir + 'ps2_test2_2ndx{}_f{}.pkl'.format(n_models2, n_folds))
-    return pd.concat([train, train2], axis=1), pd.concat([test, test2], axis=1)
+    n_train, n_test = pd.concat([train, train2], axis=1), pd.concat([test, test2], axis=1)
+    return n_train, n_test
 
 
 if __name__ == '__main__':
@@ -79,6 +80,7 @@ if __name__ == '__main__':
     df_test = df.iloc[test_ixs]
 
     new_train, new_test = get_new_guys()
+    # n_models = len(new_train.columns)
 
     print('XGBoost... ')
     params = model_params.get_lvl2()
@@ -141,14 +143,16 @@ if __name__ == '__main__':
     all_test_preds = convert_preds_to_list(new_test)
     optim_preds = ktools.ensemble_preds(all_test_preds, optimised_weights)
 
-    weights = [0.45, 0.35, 0.20]
+    weights = [0.50, 0.40, 0.10]
+    wiggle = 1.1
     print 'generating predictions for the test set. weiths:{}'.format(weights)
     final_preds = tools.ensemble_preds([preds_test_xgb, optim_preds, preds_test_nn], weights)
-    final_preds = final_preds * 1.1
+    final_preds = final_preds * wiggle
 
     final_preds_train = tools.ensemble_preds([preds_train_xgb, train_preds, preds_train_nn], weights)
+#    final_preds_train = final_preds_train * wiggle
     score = tools.get_mae_loss(train_targets, final_preds_train)
     print('train score:{}'.format(score))
 
-    sub_file_name = 'stk_3lvl2_models_x{}_f{}'.format(n_models, n_folds)
+    sub_file_name = 'stk_3lvl2_models_x{}_f{}_wiggle{}'.format(n_models, n_folds, wiggle)
     data.generate_simple_kaggle_file(final_preds, sub_file_name)

@@ -79,17 +79,16 @@ if __name__ == '__main__':
     # eval_set = [(df_test.values, test_targets)]
     eval_set = [df_test.values, test_targets]
 
-    #while True:
-    params = sample_params(random=False)
-    from million import model_params
-    params = model_params.get_ctune729c()
-    print params
-    model = CatBoostRegressor(**params)
-    model.fit(df_train.values, train_targets, eval_set=eval_set)
+    while True:
+        params = sample_params(random=False)
+        # params = model_params.get_ctune729c()
+        print params
+        model = CatBoostRegressor(**params)
+        model.fit(df_train.values, train_targets, eval_set=eval_set)
 
-    predictions = model.predict(df_test)
-    mae = tools.get_mae_loss(test_targets, predictions)
-    mse = mean_squared_error(test_targets, predictions)
-    losses = {'mse': mse, 'mae': mae}
-    params = dict(params, **losses)
-    tools.write_results_to_json(params, TUNING_RESULTS_PATH)
+        predictions = model.predict(df_test)
+        mae = tools.get_mae_loss(test_targets, predictions)
+        mse = mean_squared_error(test_targets, predictions)
+        losses = {'mse': mse, 'mae': mae}
+        params = dict(params, **losses)
+        tools.write_results_to_json(params, TUNING_RESULTS_PATH)

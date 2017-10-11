@@ -1,16 +1,14 @@
 import numpy as np
 import pandas as pd
-import xgboost as xgb
 from lightgbm import LGBMRegressor
 from sklearn.ensemble import RandomForestRegressor as RFR
 from sklearn.metrics import mean_squared_error
 
-from million import data, features, tools
-from million._config import NULL_VALUE, test_columns, test_dates
+from million import data, tools
 import seamless as ss
 
-TUNING_RESULTS_PATH = ss.paths.experiments() + 'tune_millions_lgb.json'
-y_mean = 0.0102590
+TUNING_RESULTS_PATH = ss.paths.experiments() + 'tune_millions_lgb2.json'
+
 
 def sample_params(random=False):
     if random:
@@ -19,9 +17,10 @@ def sample_params(random=False):
         params = get_best_random_params(50)
     return params
 
+
 def get_random_params():
     params = {}
-    params['learning_rate'] = np.exp(np.random.uniform(-3.5,-6.7))
+    params['learning_rate'] = 0.01
     params['min_data'] = np.random.randint(50, 8000)         # min_data_in_leaf
     params['min_hessian'] = np.random.uniform(0., 0.6)     # min_sum_hessian_in_leaf
     params['lambda_l1'] = np.random.uniform(0, 5.)     # l1 regularization
@@ -40,15 +39,16 @@ def get_random_params():
     params['objective'] = 'regression'
     params['metric'] = 'mae'          # or 'mae'
     params['n_estimators'] = 999999
-    params['num_threads'] = 4
+    params['num_threads'] = 2
     return params
+
 
 def get_best_random_params(num_elements):
     random_data = [get_random_params() for _ in range(num_elements)]
     random_df = pd.DataFrame(random_data)
     json_df = tools.read_special_json(TUNING_RESULTS_PATH)
     columns = [
-            'learning_rate', 'min_data', 'min_hessian', 'lambda_l1', 'lambda_l2',
+            'min_data', 'min_hessian', 'lambda_l1', 'lambda_l2',
             'num_leaves', 'subsample_for_bin', 'min_child_samples', 'max_depth',
             'min_child_weight', 'subsample_freq', 'subsample', 'colsample_bytree'
             ]
@@ -63,27 +63,18 @@ def get_best_random_params(num_elements):
     print 'Expected Loss: {}'.format(predicted_losses[best_prediction_ix])
     return result
 
+
 if __name__ == '__main__':
-
-    df_train, df_test = data.load_data(cache=False)
-    df = data.create_fulldf(df_train, df_test)
-
-    df = df.fillna(NULL_VALUE)
-    df = data.clean_data(df)
-    df = data.encode_labels(df)
-    #df = features.add_features(df)
-
+    df = data.load_data(from_cache=True)
+    df = tools.remove_ouliers(df)
     targets = df['logerror'].values
+
+    df, targets, train_ixs, test_ixs = data.get_cv_ixs(df, targets)
     df = data.select_features(df)
+    df_train, train_targets = df.iloc[train_ixs], targets[train_ixs]
 
-    print df.columns
-    df_full_train, targets, df_test = data.split_data(df, targets)
-    df_train, df_test, train_targets, test_targets = data.split_cv(df_full_train, targets, 0.8)
-
-    #dtrain = xgb.DMatrix(df_train.values, train_targets)
-    #dtest = xgb.DMatrix(df_test.values, test_targets)
-
-    y_mean = np.mean(train_targets)
+    df_test, test_targets = df.iloc[test_ixs], targets[test_ixs]
+    eval_set = [(df_test.values, test_targets)]
 
     while True:
         params = sample_params(random=True)
@@ -91,12 +82,12 @@ if __name__ == '__main__':
         model.fit(
                 df_train, train_targets,
                 eval_set=[(df_test, test_targets)],
-                early_stopping_rounds=25
+                early_stopping_rounds=50
                 )
         predictions = model.predict(df_test)
         mae = tools.get_mae_loss(test_targets, predictions)
         mse = mean_squared_error(test_targets, predictions)
-        losses = {'mse':mse, 'mae':mae}
+        losses = {'mse': mse, 'mae': mae}
         params = dict(params, **losses)
         tools.write_results_to_json(params, TUNING_RESULTS_PATH)
 
