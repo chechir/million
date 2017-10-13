@@ -21,7 +21,7 @@ def sample_params(random=False):
 def get_random_params():
     params = {}
     params['learning_rate'] = 0.01
-    params['min_data'] = np.random.randint(50, 8000)         # min_data_in_leaf
+    params['min_data'] = np.random.randint(2000, 16000)         # min_data_in_leaf
     params['min_hessian'] = np.random.uniform(0., 0.6)     # min_sum_hessian_in_leaf
     params['lambda_l1'] = np.random.uniform(0, 5.)     # l1 regularization
     params['lambda_l2'] = np.random.uniform(0, 5.)     # l2 regularization
@@ -54,7 +54,7 @@ def get_best_random_params(num_elements):
             ]
     mm_train = json_df[columns]
     targets = json_df['mae']
-    model = RFR(n_estimators=50)
+    model = RFR(n_estimators=60)
     model.fit(mm_train, targets)
     predicted_losses = model.predict(random_df[columns])
     best_prediction_ix = np.argmin(predicted_losses)
@@ -77,7 +77,9 @@ if __name__ == '__main__':
     eval_set = [(df_test.values, test_targets)]
 
     while True:
-        params = sample_params(random=True)
+        params = sample_params(random=False)
+        from million import model_params
+        params = model_params.get_lgb2134b()
         model = LGBMRegressor(**params)
         model.fit(
                 df_train, train_targets,

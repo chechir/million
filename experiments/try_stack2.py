@@ -1,28 +1,23 @@
 import numpy as np
 from catboost import CatBoostRegressor
-from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.linear_model import Ridge
-import xgboost as xgb
 from lightgbm import LGBMRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.svm import SVR
 
 # seed = 14
 seed = 20
-np.random.seed(seed) #keras?
+np.random.seed(seed)  # keras?
 
-from million import data, tools
-from million._config import NULL_VALUE
+from million import data, tools, features
 from million import model_params
 import seamless as ss
 
 n_folds = 5
 features_2nd = [
-        'svrb_preds', 'catb_preds', 'kerasb_preds'
+        'svrb_preds', 'catb_preds', 'kerasb_preds', 'cat2b_preds'
         ]
-n_models = len(features_2nd)
 
+n_models = len(features_2nd)
 cache_dir = tools.cache_dir()
 
 
@@ -33,16 +28,15 @@ if __name__ == '__main__':
     targets = df['logerror'].values
 
     train_ixs, test_ixs = data.get_lb_ixs(targets)
-    # df = features.add_features(df, train_ixs)
+    df = features.add_features(df, train_ixs)
 
     df = data.select_features(df)
     print df.columns
     df_train, train_targets = df.iloc[train_ixs], targets[train_ixs]
     df_test = df.iloc[test_ixs]
-
     feats_small = ['taxamount', 'heatingorsystemtypeid', 'yearbuilt', 'bedroomcnt',
-                   'fullbathcnt', 'calculatedbathnbr', 'bathroomcnt',
-                   'calculatedfinishedsquarefeet', 'finishedsquarefeet12']
+                   'calculatedbathnbr', 'feat:bad_lm_1', 'feat:bad_lm_2', 'feat:bad_lm_0',
+                   'calculatedfinishedsquarefeet']
 
     df_test_small = df_test[feats_small]
 
@@ -60,20 +54,6 @@ if __name__ == '__main__':
         x_train_small = df_train[feats_small].values[train_ix, :]
         x_val_small = df_train[feats_small].values[val_ix, :]
         assert len(x_train_small) == len(x_train)
-
-        # keras
-        keras_ix = 2
-        batch_size, epochs = 256, 15
-        model = model_params.get_keras(x_train.shape[1])
-        history = model.fit(
-                x_train, y_train,
-                nb_epoch=epochs, batch_size=batch_size,
-                validation_data=(x_val, y_val), verbose=2)
-        model.history = history
-        preds_train[val_ix, keras_ix] = model.predict(x_val).squeeze()
-        preds_test[:, keras_ix] += model.predict(df_test.values).squeeze()
-        score = tools.get_mae_loss(y_val, preds_train[val_ix, keras_ix])
-        print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
 
         # svr !
         svr_ix = 0
@@ -98,11 +78,37 @@ if __name__ == '__main__':
         print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train),
               len(x_val), i, score))
 
+        # keras
+        keras_ix = 2
+        batch_size, epochs = 256, 15
+        model = model_params.get_keras(x_train.shape[1])
+        history = model.fit(
+                x_train, y_train,
+                nb_epoch=epochs, batch_size=batch_size,
+                validation_data=(x_val, y_val), verbose=2)
+        model.history = history
+        preds_train[val_ix, keras_ix] = model.predict(x_val).squeeze()
+        preds_test[:, keras_ix] += model.predict(df_test.values).squeeze()
+        score = tools.get_mae_loss(y_val, preds_train[val_ix, keras_ix])
+        print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train), len(x_val), i, score))
+
+        # best ct less rounds
+        cat2_ix = 3
+        params = model_params.get_ctune293x()
+        params.pop('use_best_model')
+        model = CatBoostRegressor(**params)
+        model.fit(x_train, y_train)
+        preds_train[val_ix, cat2_ix] = model.predict(x_val)
+        preds_test[:, cat2_ix] += model.predict(df_test.values)
+        score = tools.get_mae_loss(y_val, preds_train[val_ix, cat2_ix])
+        print('train rows:{}, val rows:{}, fold:{}, score:{}'.format(len(x_train),
+              len(x_val), i, score))
+
     preds_test = preds_test / float(n_folds)
     new_train = df_train.copy()
     new_test = df_test.copy()
 
-    model_ixs = [svr_ix, cat_ix, keras_ix]
+    model_ixs = [svr_ix, cat_ix, keras_ix, lgb_ix, cat2_ix]
     for model_pred in zip(features_2nd, model_ixs):
         new_train[model_pred[0]] = preds_train[:, model_pred[1]]
         new_test[model_pred[0]] = preds_test[:, model_pred[1]]
@@ -116,6 +122,8 @@ if __name__ == '__main__':
     model.fit(new_train[features_2nd], train_targets)
     print(tools.get_mae_loss(train_targets, model.predict(new_train[features_2nd])))
     print(tools.get_mae_loss(train_targets, new_train['catb_preds'].values))
+    print(tools.get_mae_loss(train_targets, new_train['lgbb_preds'].values))
+    print(tools.get_mae_loss(train_targets, new_train['cat2b_preds'].values))
 
     sub_preds = model.predict(new_test[features_2nd])
     sub_preds = np.clip(sub_preds, -0.5, 0.5)

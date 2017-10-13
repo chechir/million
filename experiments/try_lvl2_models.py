@@ -6,7 +6,7 @@ seed = 1
 np.random.seed(seed)
 
 import pandas as pd
-from million import tools, data, model_params
+from million import tools, data, model_params, features
 from million._config import NULL_VALUE
 from million.experiments.try_stack import n_folds, n_models as n_models1
 from million.experiments.try_stack2 import n_models as n_models2
@@ -119,14 +119,14 @@ if __name__ == '__main__':
 
     #  ############OPTIM
     print('Optim... ')
-    init_weights = np.repeat(0.1, n_models)
+    init_weights = np.repeat(0.05, n_models)
     all_train_preds = convert_preds_to_list(new_train)
     optim = optimise_weights(
             all_train_preds, train_targets, init_weights, minimise=True)
     print "-", optim.fun
     optimised_weights = optim.x
 
-    for i in range(40):
+    for i in range(30):
         optim = optimise_weights(
                 all_train_preds, train_targets, optimised_weights, minimise=True)
         optimised_weights = optim.x

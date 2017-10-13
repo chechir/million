@@ -68,7 +68,7 @@ def get_ctune80(y_mean=y_mean):
         'random_seed': 952,
         'has_time': False,
         'use_best_model': True,
-        'verbose': True,
+        'verbose': False,
         #'ctr_border_count': 5050,
         #'max_ctr_complexity': 4,
         'name': 'experiment',
@@ -96,6 +96,28 @@ def get_ctune293(y_mean=y_mean):
         #'ctr_border_count': 5050,
         #'max_ctr_complexity': 4,
         'name': 'experiment',
+    }
+    return cat_params
+
+
+def get_ctune293x():
+    cat_params = {
+        'iterations': 3000,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'auto_stop_pval': 0.0001,
+        'learning_rate': 0.0027782225151,
+        'depth': 6,
+        'l2_leaf_reg': 5,
+        'rsm': 0.589884179754,
+        'bagging_temperature': 0.660536010706,
+        'fold_permutation_block_size': 2,
+        'gradient_iterations': 1,
+        'random_seed': 99,
+        'has_time': False,
+        'use_best_model': True,
+        'verbose': True,
+        'name': 'lessrounds',
     }
     return cat_params
 
@@ -225,3 +247,43 @@ def get_lvl2():
         'silent': 1
     }
     return xgb_params
+
+
+def get_lgb2134b(num_rounds=2684):
+    lgb_params = {
+        'n_estimators': num_rounds,
+        'boosting_type': 'gbdt',
+        'metric': 'mae',
+        'objective': 'regression',
+        'num_threads': 7,
+        'max_depth': 8,
+        'subsample_for_bin': 1202604,
+        'subsample_freq': 9,
+        'subsample': 0.54084219,
+        'lambda_l1': 1.29298553,
+        'lambda_l2': 3.15537963,
+        'num_leaves': 366,
+        'min_child_samples': 39.34753004,
+        'min_child_weight': 10,
+        'min_split_gain': 0,
+        'learning_rate': 0.005,
+        'min_data': 6913,
+        'colsample_bytree': 0.35162847,
+        'min_hessian': 0.42382525,
+        'seed': 3125794,
+        'early_stopping_rounds': 100,
+        }
+    return lgb_params
+
+
+def get_lgbkernel2(num_rounds=1000):
+    params = {}
+    params['metric'] = 'mae'
+    params['max_depth'] = 100
+    params['num_leaves'] = 32
+    params['feature_fraction'] = .85
+    params['bagging_fraction'] = .95
+    params['bagging_freq'] = 8
+    params['learning_rate'] = 0.01
+    params['verbosity'] = 0
+    return params

@@ -1,4 +1,5 @@
 from functools import partial
+from sklearn.linear_model import LinearRegression
 import numpy as np
 import pandas as pd
 import seamless as ss
@@ -7,13 +8,50 @@ from million import tools as nptools
 BASELINE_PRED = 0.0115   # Baseline based on mean of training data, per Oleg
 
 
-def add_features(df, train_ixs):
+def add_features_quasi(df, train_ixs):
     qmedian_cols = ['regionidzip', 'propertylandusetypeid']
 #    0.0656769900765 (BM)
+
     for col in qmedian_cols:
         df['qmedian_' + col] = grouped_quasi_medians(df, train_ixs, groupby=col)
         print col
     return df
+
+
+def add_features(df, train_ixs):
+    feats_list = (
+        ['taxamount', 'heatingorsystemtypeid', 'bedroomcnt', 'fullbathcnt',
+         'calculatedbathnbr', 'calculatedfinishedsquarefeet', 'finishedsquarefeet12'],
+        ['latitude', 'longitude', 'yearbuilt', 'calculatedbathnbr'],
+        ['poolsizesum', 'fireplaceflag', 'unitcnt', 'calculatedfinishedsquarefeet',
+         'hashottuborspa']
+        )
+
+    for i, feats in enumerate(feats_list):
+        df['feat:bad_lm_{}'.format(i)] = bad_model(df, train_ixs, feats)
+    return df
+
+
+def add_features_exp(df, train_ixs):
+    feats_list = (
+        ['taxamount', 'heatingorsystemtypeid', 'bedroomcnt', 'fullbathcnt',
+         'calculatedbathnbr', 'calculatedfinishedsquarefeet', 'finishedsquarefeet12'],
+        ['latitude', 'longitude', 'yearbuilt', 'calculatedbathnbr'],
+        ['poolsizesum', 'fireplaceflag', 'unitcnt', 'calculatedfinishedsquarefeet',
+         'hashottuborspa'],
+        )
+
+    for i, feats in enumerate(feats_list):
+        df['feat:bad_lm_{}'.format(i)] = bad_model(df, train_ixs, feats)
+    return df
+
+
+def bad_model(df, train_ixs, feats):
+    train = df.iloc[train_ixs, :]
+    model = LinearRegression(fit_intercept=False, normalize=True, copy_X=True, n_jobs=-1)
+    model.fit(train[feats], train['logerror'])
+    print nptools.get_mae_loss(train['logerror'].values, model.predict(train[feats]))
+    return model.predict(df[feats])
 
 
 def grouped_quasi_medians(df, train_ixs, groupby):
