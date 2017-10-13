@@ -1,3 +1,5 @@
 subs/
 lib/
 core/
+*.tsv
+StackNet.jar
