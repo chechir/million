@@ -8,8 +8,8 @@ from million import model_params
 
 cache_dir = tools.cache_dir()
 seed = 1
-evaluate_cv = True
-nrounds = 2930
+evaluate_cv = False
+nrounds = 3200
 
 # bestTest = 0.06860590443
 # bestIteration = 3130
@@ -20,6 +20,7 @@ nrounds = 2930
 if __name__ == '__main__':
     np.random.seed(seed)
     df = data.load_data(from_cache=True)
+    df = tools.remove_ouliers(df)
     targets = df['logerror'].values
 
     if evaluate_cv:
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     else:
         train_ixs, test_ixs = data.get_lb_ixs(targets)
 
-    df = features.add_features_exp(df, train_ixs)
+    df = features.add_features(df, train_ixs)
     df = data.select_features(df)
     print df.columns
 
@@ -39,7 +40,7 @@ if __name__ == '__main__':
         df_test = df.iloc[test_ixs]
         eval_set = [df_train.values, train_targets]
 
-    params = model_params.get_ctune293x()
+    params = model_params.get_ctune293x(num_rounds=3500, seed=18)
     params.pop('use_best_model')
     model = CatBoostRegressor(**params)
     model.fit(df_train.values, train_targets,
@@ -52,4 +53,4 @@ if __name__ == '__main__':
     if not evaluate_cv:
         predictions = model.predict(df_test)
 #        predictions = predict_by_period(df_test, model)
-        data.generate_simple_kaggle_file(predictions, 'sub_singlelgb_quasies')
+        data.generate_simple_kaggle_file(predictions, 'sub_singlelgb_bad_models')

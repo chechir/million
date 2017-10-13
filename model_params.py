@@ -100,9 +100,9 @@ def get_ctune293(y_mean=y_mean):
     return cat_params
 
 
-def get_ctune293x():
+def get_ctune293x(num_rounds=3000, seed=99):
     cat_params = {
-        'iterations': 3000,
+        'iterations': num_rounds,
         'thread_count': 8,
         'loss_function': 'MAE',
         'auto_stop_pval': 0.0001,
@@ -113,7 +113,7 @@ def get_ctune293x():
         'bagging_temperature': 0.660536010706,
         'fold_permutation_block_size': 2,
         'gradient_iterations': 1,
-        'random_seed': 99,
+        'random_seed': seed,
         'has_time': False,
         'use_best_model': True,
         'verbose': True,
