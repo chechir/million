@@ -7,6 +7,21 @@ from keras.models import Sequential
 y_mean = 0.0102590
 
 
+def get_catlb(y_mean=y_mean):
+    cat_params = {
+        'iterations': 630,
+        'thread_count': 8,
+        'loss_function': 'MAE',
+        'eval_metric': 'MAE',
+        'learning_rate': 0.03,
+        'depth': 6,
+        'l2_leaf_reg': 3,
+        'random_seed': 952,
+        'verbose': False,
+        'name': 'aaa',
+    }
+    return cat_params
+
 def get_xtune11k(y_mean=y_mean):
     xgb_params = {
         'objective': 'reg:linear',

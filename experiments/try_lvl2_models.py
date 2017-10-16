@@ -6,7 +6,7 @@ seed = 1
 np.random.seed(seed)
 
 import pandas as pd
-from million import tools, data, model_params, features
+from million import tools, data, model_params
 from million._config import NULL_VALUE
 from million.experiments.try_stack import n_folds, n_models as n_models1
 from million.experiments.try_stack2 import n_models as n_models2
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     for i in range(n_bags):
         model = xgb.train(
                 params,
-                dtrain, num_boost_round=300, verbose_eval=2
+                dtrain, num_boost_round=290, verbose_eval=2
                 )
         preds_train_xgb += model.predict(dtrain)
         preds_test_xgb += model.predict(dtest)
@@ -119,14 +119,14 @@ if __name__ == '__main__':
 
     #  ############OPTIM
     print('Optim... ')
-    init_weights = np.repeat(0.05, n_models)
+    init_weights = np.repeat(0.06, n_models)
     all_train_preds = convert_preds_to_list(new_train)
     optim = optimise_weights(
             all_train_preds, train_targets, init_weights, minimise=True)
     print "-", optim.fun
     optimised_weights = optim.x
 
-    for i in range(30):
+    for i in range(10):
         optim = optimise_weights(
                 all_train_preds, train_targets, optimised_weights, minimise=True)
         optimised_weights = optim.x
@@ -143,8 +143,8 @@ if __name__ == '__main__':
     all_test_preds = convert_preds_to_list(new_test)
     optim_preds = ktools.ensemble_preds(all_test_preds, optimised_weights)
 
-    weights = [0.50, 0.40, 0.10]
-    wiggle = 1.1
+    weights = [0.30, 0.60, 0.10]
+    wiggle = 1.0
     print 'generating predictions for the test set. weiths:{}'.format(weights)
     final_preds = tools.ensemble_preds([preds_test_xgb, optim_preds, preds_test_nn], weights)
     final_preds = final_preds * wiggle

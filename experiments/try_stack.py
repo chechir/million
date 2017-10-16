@@ -12,7 +12,7 @@ from sklearn.svm import SVR
 seed = 20
 np.random.seed(seed) #keras?
 
-from million import data, tools
+from million import data, tools, features
 from million._config import NULL_VALUE
 from million import model_params
 import seamless as ss
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     targets = df['logerror'].values
 
     train_ixs, test_ixs = data.get_lb_ixs(targets)
-    # df = features.add_features(df, train_ixs)
+    df = features.add_features(df, train_ixs)
 
     df = data.select_features(df)
     print df.columns
@@ -193,8 +193,8 @@ if __name__ == '__main__':
         new_test[model_pred[0]] = preds_test[:, model_pred[1]]
 
     print('saving first level preds')
-    ss.io.write_pickle(new_train[features_2nd], cache_dir + 'ps2_train_2ndx{}_f{}.pkl'.format(n_models, n_folds))
-    ss.io.write_pickle(new_test[features_2nd], cache_dir + 'ps2_test_2ndx{}_f{}.pkl'.format(n_models, n_folds))
+    ss.io.write_pickle(new_train[features_2nd], cache_dir + 'ps2_train_2ndx{}_f{}_feats.pkl'.format(n_models, n_folds))
+    ss.io.write_pickle(new_test[features_2nd], cache_dir + 'ps2_test_2ndx{}_f{}_feats.pkl'.format(n_models, n_folds))
 
     # second level predictions
     model = LinearRegression(n_jobs=-1)
